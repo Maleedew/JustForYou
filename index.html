@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Valentine Surprise</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;700&family=Great+Vibes&family=Pacifico&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            background: radial-gradient(circle, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* --- Floating Hearts Background --- */
+        .bg-hearts {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; z-index: -1; pointer-events: none;
+        }
+        .heart {
+            position: absolute; bottom: -100px; width: 40px; height: 40px;
+            background: rgba(255, 255, 255, 0.5);
+            clip-path: path('M20 35.6 L8.4 24.5 C2.3 18.7 2.6 9.4 8.5 4.3 C14.4 -0.8 20 5.6 20 5.6 C20 5.6 25.6 -0.8 31.5 4.3 C37.4 9.4 37.7 18.7 31.6 24.5 L20 35.6 Z');
+            animation: floatUp 8s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+        }
+
+        /* --- UI Cards (Questions) --- */
+        #ui-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center; z-index: 10;
+            width: 90%; max-width: 500px;
+        }
+        .card-custom {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px; padding: 2rem;
+            box-shadow: 0 10px 30px rgba(255, 65, 108, 0.3);
+            border: 3px solid #ffdde1;
+            transition: all 0.5s ease;
+        }
+        h1 { color: #ff416c; font-weight: 700; margin-bottom: 20px; }
+        .cute-img {
+            max-width: 150px; height: auto; margin-bottom: 20px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .btn-yes {
+            background: #ff416c; color: white; border: none;
+            padding: 10px 30px; border-radius: 50px; font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-yes:hover { background: #ff4b2b; transform: scale(1.1); }
+        .btn-no {
+            background: #8e9eab; color: white; border: none;
+            padding: 10px 30px; border-radius: 50px; font-size: 1.2rem;
+        }
+
+        /* --- Extra Surprise Button --- */
+        #btn-final-surprise {
+            position: absolute; bottom: 10%; left: 50%;
+            transform: translateX(-50%); z-index: 20;
+            display: none;
+            font-size: 1.3rem; background: #ff0055; color: white;
+            padding: 15px 30px; border-radius: 50px;
+            border: 3px solid white;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+            animation: pulse 1.5s infinite;
+            cursor: pointer;
+        }
+        @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } 100% { transform: translateX(-50%) scale(1); } }
+
+        /* --- Full Screen Letter Overlay --- */
+        #letter-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: none; /* Hidden initially */
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 1s ease;
+        }
+        .paper-letter {
+            background: #fff0f5;
+            width: 90%; max-width: 600px; height: auto;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            position: relative;
+            transform: scale(0.5);
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            border: 2px solid #d62828;
+            background-image: repeating-linear-gradient(#fff0f5 0px, #fff0f5 24px, #ffdde1 25px);
+        }
+        .paper-letter h2 {
+            font-family: 'Great Vibes', cursive;
+            color: #d62828; font-size: 3rem; margin-bottom: 20px;
+        }
+        .paper-letter p {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            color: #333; font-size: 1.5rem; line-height: 2rem; font-weight: bold;
+        }
+        .paper-decor { font-size: 3rem; margin-top: 20px; }
+
+        /* --- 3D Canvas --- */
+        #three-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; display: none;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Audio -->
+    <audio id="bg-music" loop>
+        <source src="https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg" type="audio/ogg">
+    </audio>
+
+    <!-- Background Elements -->
+    <div class="bg-hearts" id="hearts-container"></div>
+    <canvas id="three-canvas"></canvas>
+
+    <!-- UI: Questions -->
+    <div id="ui-container">
+        <!-- Start Screen -->
+        <div id="screen-start" class="card-custom">
+            <h1 class="display-4">Valentine's Surprise ❤️</h1>
+            <p class="lead">පුංචි ප්‍රශ්න වගයක් තියෙනවා...</p>
+            <button class="btn btn-yes" onclick="startJourney()">Click Me</button>
+        </div>
+
+        <!-- Question 1 -->
+        <div id="screen-q1" class="card-custom hidden">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712009.png" alt="Bear" class="cute-img">
+            <h1>ඔයා මට ආදරෙයිද?</h1>
+            <div class="d-flex justify-content-center gap-3">
+                <button class="btn btn-yes" onclick="nextQuestion()">ඔව් ගොඩාක්</button>
+                <button class="btn btn-no" onmouseover="moveButton(this)" onclick="moveButton(this)">නෑ</button>
+            </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div id="screen-q2" class="card-custom hidden">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="Dog" class="cute-img">
+            <h1>එහෙනම්... මාව Marry කරන්න කැමතිද? 💍</h1>
+            <div class="d-flex justify-content-center gap-3" style="position: relative; height: 60px;">
+                <button class="btn btn-yes" onclick="showBoxSurprise()">කැමතියි!</button>
+                <button class="btn btn-no" onmouseover="moveButton(this)" onclick="moveButton(this)" style="position: absolute;">අපෝ නෑ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Extra Button -->
+    <button id="btn-final-surprise" onclick="triggerLetterAnimation()">තව චූටි බඩ්ඩක් ඔයාට තියෙනව 😍</button>
+
+    <!-- Full Screen Letter Overlay -->
+    <div id="letter-overlay">
+        <div class="paper-letter" id="paper-content">
+            <h2>Happy Valentine's Day!</h2>
+            <p>
+                මගේ ජීවිතේ හැමදාම<br>
+                ඔයා මගෙ ලඟින් ඉන්න...<br><br>
+                මම ඔයාට ගොඩක්<br>
+                ආදරෙයි මැණික... ❤️
+            </p>
+            <div class="paper-decor">🌹 🧸 🍫</div>
+        </div>
+    </div>
+
+    <!-- Three.js Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // --- 1. Background Hearts ---
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 3 + 5 + 's';
+            heart.style.background = `rgba(255, ${Math.random() * 100 + 150}, ${Math.random() * 100 + 150}, ${Math.random() * 0.5 + 0.3})`;
+            document.getElementById('hearts-container').appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 8000);
+        }
+        setInterval(createHeart, 300);
+
+        // --- 2. UI Interaction ---
+        const music = document.getElementById('bg-music');
+        
+        function startJourney() {
+            music.volume = 0.5;
+            music.play().catch(e => console.log("Audio requires interaction"));
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-q1').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            document.getElementById('screen-q1').classList.add('hidden');
+            document.getElementById('screen-q2').classList.remove('hidden');
+        }
+
+        function moveButton(btn) {
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
+            btn.style.position = 'fixed';
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+        }
+
+        // --- 3. Three.js Scene Setup ---
+        let scene, camera, renderer, controls;
+        let boxGroup, lidGroup, ringGroup, envelopeGroup, letterGroup, envelopeFlap;
+        let boxOpened = false, showLetterButton = false, letterTriggered = false, fullLetterShown = false;
+        let time = 0;
+
+        function showBoxSurprise() {
+            document.getElementById('ui-container').style.display = 'none';
+            document.getElementById('three-canvas').style.display = 'block';
+            initThreeJS();
+        }
+
+        function triggerLetterAnimation() {
+            document.getElementById('btn-final-surprise').style.display = 'none';
+            letterTriggered = true;
+            // Move camera to center envelope
+            camera.position.set(0, 3, 9);
+        }
+
+        function showFullLetterOverlay() {
+            if(fullLetterShown) return;
+            fullLetterShown = true;
+            
+            const overlay = document.getElementById('letter-overlay');
+            const paper = document.getElementById('paper-content');
+            
+            overlay.style.display = "flex";
+            // Allow a small delay for display:flex to apply
+            setTimeout(() => {
+                overlay.style.opacity = "1";
+                paper.style.transform = "scale(1)";
+            }, 100);
+        }
+
+        function initThreeJS() {
+            const canvas = document.getElementById('three-canvas');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0xff9a9e, 0.02);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 1.0;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffecd2, 1.5);
+            pointLight.position.set(5, 10, 5);
+            scene.add(pointLight);
+
+            // --- OBJECTS ---
+            
+            // 1. Gift Box
+            boxGroup = new THREE.Group();
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0xd62828, roughness: 0.4 });
+            const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.3 });
+            
+            // Box Base
+            const box = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), boxMat);
+            box.position.y = -1.5;
+            boxGroup.add(box);
+            // Ribbons
+            const r1 = new THREE.Mesh(new THREE.BoxGeometry(4.1, 3, 0.5), ribbonMat); r1.position.y = -1.5; boxGroup.add(r1);
+            const r2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3, 4.1), ribbonMat); r2.position.y = -1.5; boxGroup.add(r2);
+
+            // Lid
+            lidGroup = new THREE.Group();
+            lidGroup.position.set(0, 0, -2); // Hinge
+            const lid = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.5, 4.2), boxMat);
+            lid.position.set(0, 0.25, 2); lidGroup.add(lid);
+            const lr1 = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.6, 0.5), ribbonMat); lr1.position.set(0, 0.25, 2); lidGroup.add(lr1);
+            const lr2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 4.3), ribbonMat); lr2.position.set(0, 0.25, 2); lidGroup.add(lr2);
+            
+            boxGroup.add(lidGroup);
+            scene.add(boxGroup);
+
+            // 2. Ring
+            ringGroup = new THREE.Group();
+            const band = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.08, 16, 100), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 1 }));
+            const diamond = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 0), new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, transmission: 0.9, transparent: true }));
+            diamond.position.y = 0.55;
+            ringGroup.add(band); ringGroup.add(diamond);
+            ringGroup.position.set(0, -1, 0);
+            scene.add(ringGroup);
+
+            // 3. Envelope
+            envelopeGroup = new THREE.Group();
+            const envMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const envBody = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 0.1), envMat);
+            envelopeGroup.add(envBody);
+            
+            // Flap
+            envelopeFlap = new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.5, 4), new THREE.MeshStandardMaterial({ color: 0xf0f0f0 }));
+            envelopeFlap.rotation.y = Math.PI / 4; 
+            envelopeFlap.scale.z = 0.05;
+            envelopeFlap.position.y = 1.25;
+            envelopeFlap.rotation.z = Math.PI; // Closed
+            envelopeGroup.add(envelopeFlap);
+
+            // 3D Letter (Simplified representation)
+            const letterMat = new THREE.MeshBasicMaterial({ color: 0xfff0f5 }); // Pink paper color
+            letterGroup = new THREE.Mesh(new THREE.PlaneGeometry(3, 2), letterMat);
+            letterGroup.position.z = -0.06;
+            envelopeGroup.add(letterGroup);
+
+            envelopeGroup.position.set(0, -1, 0);
+            envelopeGroup.scale.set(0,0,0); // Hidden start
+            scene.add(envelopeGroup);
+
+            // Particles
+            const partGeo = new THREE.BufferGeometry();
+            const pos = new Float32Array(600);
+            for(let i=0; i<600; i++) pos[i] = (Math.random()-0.5)*20;
+            partGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const particles = new THREE.Points(partGeo, new THREE.PointsMaterial({ size: 0.2, color: 0xff0000, transparent: true, opacity: 0.6 }));
+            scene.add(particles);
+
+            camera.position.set(0, 5, 8);
+            camera.lookAt(0,0,0);
+
+            // --- ANIMATION LOOP ---
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.01;
+                controls.update();
+
+                // 1. Open Gift Box
+                if (lidGroup.rotation.x > -2) {
+                    lidGroup.rotation.x -= 0.03;
+                } else {
+                    boxOpened = true;
+                }
+
+                // 2. Ring Animation
+                if (boxOpened && !letterTriggered) {
+                    if (ringGroup.position.y < 2) {
+                        ringGroup.position.y += 0.02;
+                        ringGroup.rotation.y += 0.03;
+                    } else {
+                        // Show "Extra Surprise" Button
+                        if (!showLetterButton) {
+                            showLetterButton = true;
+                            document.getElementById('btn-final-surprise').style.display = 'block';
+                        }
+                        ringGroup.position.y = 2 + Math.sin(time * 2) * 0.1;
+                        ringGroup.rotation.y += 0.01;
+                    }
+                }
+
+                // 3. Envelope Animation (After Button Click)
+                if (letterTriggered) {
+                    // Hide Ring
+                    if (ringGroup.scale.x > 0) ringGroup.scale.subScalar(0.05);
+
+                    // Show Envelope
+                    if (envelopeGroup.scale.x < 1) envelopeGroup.scale.addScalar(0.05);
+                    
+                    // Move Envelope Up
+                    if (envelopeGroup.position.y < 2.0) {
+                        envelopeGroup.position.y += 0.04;
+                    } else {
+                        // Open Flap
+                        if (envelopeFlap.rotation.x > -2.5) {
+                             envelopeFlap.rotation.x -= 0.1;
+                        } else {
+                            // Slide Letter Out
+                            if (letterGroup.position.y < 2.5) { // Slide up high
+                                letterGroup.position.y += 0.04;
+                            } else {
+                                // Letter is fully out -> Show HTML Overlay
+                                showFullLetterOverlay();
+                            }
+                        }
+                    }
+                    envelopeGroup.lookAt(camera.position);
+                }
+
+                particles.rotation.y = time * 0.05;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        window.addEventListener('resize', () => {
+            if(camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+    </script>
+</body>
+      </html>
